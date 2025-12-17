@@ -1,0 +1,254 @@
+/* 主布局样式 */
+.main-layout {
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+
+/* 头部样式 */
+.main-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e8e8e8;
+  padding: 0 24px !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 64px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.logo-icon {
+  font-size: 24px;
+}
+
+.logo-text {
+  letter-spacing: 0.5px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.user-info {
+  padding: 4px 12px;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+
+.user-info:hover {
+  background: #f0f2f5;
+}
+
+.user-dropdown-menu {
+  margin-top: 6px !important;
+}
+
+.user-dropdown-menu .ant-dropdown-menu {
+  padding: 4px !important;
+  min-width: 120px !important;
+  max-width: 140px !important;
+  border-radius: 6px !important;
+}
+
+.user-dropdown-menu .ant-dropdown-menu-item {
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+  margin: 1px 2px !important;
+  line-height: 1.4 !important;
+}
+
+.user-dropdown-menu .ant-dropdown-menu-item-icon {
+  font-size: 12px !important;
+  margin-right: 6px !important;
+}
+
+.user-dropdown-menu .ant-dropdown-menu-item-divider {
+  margin: 3px 2px !important;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  margin-left: 12px;
+  line-height: 1.4;
+  min-width: 60px;
+  max-width: 120px;
+  overflow: hidden;
+}
+
+.user-details .ant-typography {
+  margin: 0 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 侧边栏样式 */
+.main-sider {
+  background: #ffffff !important;
+  border-right: 1px solid #e8e8e8;
+  box-shadow: none;
+}
+
+.main-sider .ant-layout-sider-children {
+  background: #ffffff;
+}
+
+.main-menu {
+  border-right: none !important;
+  padding: 16px 8px;
+  background: transparent !important;
+}
+
+.main-menu .ant-menu-item {
+  margin: 4px 8px !important;
+  border-radius: 8px !important;
+  height: 44px !important;
+  line-height: 44px !important;
+  transition: all 0.2s ease;
+  margin-bottom: 4px !important;
+}
+
+.main-menu .ant-menu-item:hover {
+  background: #f0f2f5 !important;
+}
+
+.main-menu .ant-menu-item-selected {
+  background: #e6f7ff !important;
+  color: #1890ff !important;
+  font-weight: 500;
+  border-left: 3px solid #1890ff;
+}
+
+.main-menu .ant-menu-item-selected .ant-menu-item-icon {
+  color: #1890ff !important;
+}
+
+.main-menu .ant-menu-item-icon {
+  font-size: 16px;
+  margin-right: 12px;
+}
+
+/* 内容区域样式 */
+.main-content-layout {
+  padding: 24px;
+  background: #f5f7fa;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 64px);
+}
+
+.main-content {
+  background: #ffffff !important;
+  border-radius: 8px;
+  padding: 24px;
+  flex: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 下拉菜单样式优化 */
+.ant-dropdown-menu {
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+  padding: 4px !important;
+  min-width: 120px !important;
+  max-width: 140px !important;
+  margin-top: 6px !important;
+}
+
+.ant-dropdown-menu-item {
+  border-radius: 4px !important;
+  margin: 1px 2px !important;
+  padding: 6px 10px !important;
+  transition: all 0.2s !important;
+  height: auto !important;
+  line-height: 1.4 !important;
+  font-size: 13px !important;
+}
+
+.ant-dropdown-menu-item-icon {
+  margin-right: 6px !important;
+  font-size: 12px !important;
+}
+
+.ant-dropdown-menu-item:hover {
+  background: #f0f2f5 !important;
+}
+
+.ant-dropdown-menu-item-danger:hover {
+  background: #fff1f0 !important;
+  color: #ff4d4f !important;
+}
+
+.ant-dropdown-menu-item-divider {
+  margin: 3px 2px !important;
+}
+
+/* 优化头像样式 */
+.ant-avatar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 页脚样式 */
+.main-footer {
+  background: #ffffff !important;
+  border-top: 1px solid #e8e8e8;
+  padding: 12px 24px !important;
+  text-align: center;
+  margin-top: auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .main-header {
+    padding: 0 16px !important;
+  }
+  
+  .logo-text {
+    display: none;
+  }
+  
+  .main-sider {
+    width: 80px !important;
+  }
+  
+  .main-content {
+    padding: 16px;
+  }
+  
+  .user-details {
+    display: none;
+  }
+  
+  .main-footer {
+    padding: 8px 16px !important;
+    font-size: 11px !important;
+  }
+}
+

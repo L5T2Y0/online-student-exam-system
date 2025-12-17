@@ -1,0 +1,239 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #f0f2f5;
+  color: #262626;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* 优化Tooltip样式 */
+.ant-tooltip {
+  max-width: 300px;
+}
+
+.ant-tooltip-inner {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ant-tooltip-arrow::before {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+}
+
+/* 优化Popconfirm样式 */
+.ant-popconfirm {
+  max-width: 280px;
+}
+
+.ant-popconfirm-inner-content {
+  padding: 12px 16px;
+}
+
+.ant-popconfirm-message {
+  margin-bottom: 8px;
+}
+
+.ant-popconfirm-buttons {
+  margin-top: 12px;
+}
+
+/* 优化Popover样式 */
+.ant-popover {
+  max-width: 400px;
+}
+
+.ant-popover-inner {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 优化Table样式 */
+.ant-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: #f5f5f5;
+}
+
+.ant-table-tbody > tr.ant-table-row-selected > td {
+  background: #e6f7ff;
+}
+
+/* 优化Button样式 */
+.ant-btn {
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.ant-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 优化Card样式 */
+.ant-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
+}
+
+.ant-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* 优化Input样式 */
+.ant-input,
+.ant-input-password,
+.ant-select-selector {
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.ant-input:focus,
+.ant-input-password:focus,
+.ant-select-focused .ant-select-selector {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* 优化Tag样式 */
+.ant-tag {
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin: 0 4px;
+}
+
+/* 优化Message样式 */
+.ant-message {
+  top: 80px;
+}
+
+.ant-message-notice-content {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 优化Modal样式 */
+.ant-modal {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ant-modal-content {
+  border-radius: 12px;
+}
+
+.ant-modal-header {
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: none;
+  padding: 20px 24px;
+}
+
+.ant-modal-title {
+  color: white;
+  font-weight: 600;
+}
+
+.ant-modal-close {
+  color: white;
+}
+
+.ant-modal-close:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 优化Dropdown样式 */
+.ant-dropdown {
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.ant-dropdown-menu {
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.ant-dropdown-menu-item {
+  border-radius: 6px;
+  margin: 2px 0;
+  transition: all 0.2s;
+}
+
+.ant-dropdown-menu-item:hover {
+  background: rgba(24, 144, 255, 0.1);
+}
+
+/* 滚动条优化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 加载动画优化 */
+.ant-spin-nested-loading > div > .ant-spin {
+  max-height: none;
+}
+
+.ant-spin-blur {
+  opacity: 0.5;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .ant-table {
+    font-size: 12px;
+  }
+  
+  .ant-card {
+    margin: 8px;
+  }
+}

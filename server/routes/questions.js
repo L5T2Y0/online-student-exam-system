@@ -14,6 +14,11 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.get('/', authenticate, async (req, res) => {
   try {
     const { type, subject, chapter, difficulty, page = 1, limit = 10 } = req.query;
+    
+    // 验证并限制分页参数
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+    
     const where = {};
 
     if (type) where.type = type;
@@ -24,15 +29,15 @@ router.get('/', authenticate, async (req, res) => {
     const { count, rows: questions } = await Question.findAndCountAll({
       where,
       include: [{ model: User, as: 'creator', attributes: ['name'] }],
-      limit: parseInt(limit),
-      offset: (parseInt(page) - 1) * parseInt(limit),
+      limit: limitNum,
+      offset: (pageNum - 1) * limitNum,
       order: [['createdAt', 'DESC']]
     });
 
     res.json({
       questions,
-      totalPages: Math.ceil(count / limit),
-      currentPage: parseInt(page),
+      totalPages: Math.ceil(count / limitNum),
+      currentPage: pageNum,
       total: count
     });
   } catch (error) {
@@ -245,6 +250,17 @@ router.post('/', authenticate, authorize('teacher', 'admin'), async (req, res) =
       return res.status(400).json({ message: '请填写必填字段' });
     }
 
+    // 验证题型
+    if (!['single', 'multiple', 'judge', 'fill', 'essay'].includes(type)) {
+      return res.status(400).json({ message: '题型无效' });
+    }
+
+    // 验证分数
+    const scoreValue = parseInt(score) || 5;
+    if (scoreValue <= 0) {
+      return res.status(400).json({ message: '分数必须大于0' });
+    }
+
     const question = await Question.create({
       type,
       subject,
@@ -253,7 +269,7 @@ router.post('/', authenticate, authorize('teacher', 'admin'), async (req, res) =
       content,
       options: options || [],
       correctAnswer,
-      score: score || 5,
+      score: scoreValue,
       explanation: explanation || '',
       createdBy: req.user.id
     });
@@ -338,10 +354,29 @@ router.post('/import', authenticate, authorize('teacher', 'admin'), upload.singl
       return res.status(400).json({ message: '请上传Excel文件' });
     }
 
+    // 文件大小限制（5MB）
+    if (req.file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({ message: '文件大小不能超过5MB' });
+    }
+
+    // 文件类型验证
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel'
+    ];
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ message: '只支持Excel文件（.xlsx, .xls）' });
+    }
+
     const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(worksheet);
+
+    // 限制导入数量
+    if (data.length > 500) {
+      return res.status(400).json({ message: '单次最多导入500条数据' });
+    }
 
     const typeMap = {
       'single': 'single',
@@ -462,6 +497,11 @@ router.delete('/batch', authenticate, authorize('teacher', 'admin'), async (req,
     
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ message: '请提供要删除的题目ID数组' });
+    }
+
+    // 限制批量操作数量
+    if (ids.length > 100) {
+      return res.status(400).json({ message: '单次最多删除100道题目' });
     }
 
     const questions = await Question.findAll({

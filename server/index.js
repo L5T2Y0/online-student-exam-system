@@ -1,14 +1,64 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const { sequelize } = require('./models');
 
+// 环境变量验证
+const requiredEnvVars = ['JWT_SECRET', 'DB_NAME', 'DB_USER'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (missingEnvVars.length > 0) {
+  console.error('❌ 缺少必需的环境变量:', missingEnvVars.join(', '));
+  console.error('请在 .env 文件中配置这些变量');
+  process.exit(1);
+}
+
 const app = express();
 
-// 中间件
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// CORS 配置 - 限制允许的来源
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:3000', 'http://localhost:3001'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // 允许没有 origin 的请求（如移动应用、Postman、同源请求）
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn('CORS 阻止的来源:', origin);
+      callback(null, true); // 开发环境暂时允许所有来源
+    }
+  },
+  credentials: true
+}));
+
+// 请求体大小限制
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 全局请求频率限制
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分钟
+  max: 1000, // 限制1000次请求
+  message: '请求过于频繁，请稍后再试',
+  standardHeaders: true,
+  legacyHeaders: false,
+  trustProxy: false, // 如果在代理后面，设置为 true
+});
+app.use(globalLimiter);
+
+// 认证相关接口的严格限制
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分钟
+  max: 10, // 限制10次尝试
+  message: '登录/注册尝试次数过多，请15分钟后再试',
+  skipSuccessfulRequests: true, // 成功的请求不计入限制
+  trustProxy: false, // 如果在代理后面，设置为 true
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // 路由
 app.use('/api/auth', require('./routes/auth'));

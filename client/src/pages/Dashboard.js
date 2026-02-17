@@ -22,7 +22,10 @@ const Dashboard = () => {
     paperCount: 0,
     examCount: 0,
     scoreCount: 0,
-    inProgressCount: 0
+    inProgressCount: 0,
+    pendingCount: 0,
+    wrongCount: 0,
+    userCount: 0
   });
   const [loading, setLoading] = React.useState(true);
 
@@ -37,7 +40,7 @@ const Dashboard = () => {
     setLoading(true);
     try {
       if (user?.role === 'teacher' || user?.role === 'admin') {
-        const [questionsRes, papersRes] = await Promise.all([
+        const [questionsRes, papersRes, scoresRes, usersRes] = await Promise.all([
           api.get('/api/questions', { params: { limit: 1 } }).catch(err => {
             console.error('获取题目统计失败:', err);
             return { data: { total: 0 } };
@@ -45,17 +48,33 @@ const Dashboard = () => {
           api.get('/api/papers', { params: { limit: 1 } }).catch(err => {
             console.error('获取试卷统计失败:', err);
             return { data: { total: 0 } };
-          })
+          }),
+          api.get('/api/scores', { params: { page: 1, limit: 1000, status: 'submitted' } }).catch(err => {
+            console.error('获取待批阅统计失败:', err);
+            return { data: { total: 0, exams: [] } };
+          }),
+          // 管理员获取用户统计
+          user?.role === 'admin' ? api.get('/api/users', { params: { limit: 1 } }).catch(err => {
+            console.error('获取用户统计失败:', err);
+            return { data: { total: 0 } };
+          }) : Promise.resolve({ data: { total: 0 } })
         ]);
+        
+        // 统计待批阅的考试（状态为 submitted）
+        const pendingExams = scoresRes.data?.exams || [];
+        const pendingCount = pendingExams.filter(exam => exam.status === 'submitted').length;
+        
         setStats({
           questionCount: questionsRes.data?.total || 0,
           paperCount: papersRes.data?.total || 0,
           examCount: 0,
-          scoreCount: 0
+          scoreCount: 0,
+          pendingCount: pendingCount,
+          userCount: usersRes.data?.total || 0
         });
       } else if (user?.role === 'student') {
         try {
-          const [examsRes, scoresRes] = await Promise.all([
+          const [examsRes, scoresRes, wrongRes] = await Promise.all([
             api.get('/api/exams/my/list', { params: { page: 1, limit: 1000 } }).catch(err => {
               console.error('获取考试统计失败:', err);
               return { data: { total: 0, exams: [] } };
@@ -63,11 +82,16 @@ const Dashboard = () => {
             api.get('/api/scores', { params: { page: 1, limit: 1 } }).catch(err => {
               console.error('获取成绩统计失败:', err);
               return { data: { total: 0, exams: [] } };
+            }),
+            api.get('/api/scores/wrong-questions', { params: { limit: 1000 } }).catch(err => {
+              console.error('获取错题统计失败:', err);
+              return { data: { questions: [] } };
             })
           ]);
           
           const examTotal = examsRes.data?.total || 0;
           const scoreTotal = scoresRes.data?.total || 0;
+          const wrongCount = wrongRes.data?.questions?.length || 0;
           
           // 统计进行中的考试数量
           const exams = examsRes.data?.exams || [];
@@ -78,7 +102,8 @@ const Dashboard = () => {
             paperCount: 0,
             examCount: examTotal,
             scoreCount: scoreTotal,
-            inProgressCount: inProgressCount
+            inProgressCount: inProgressCount,
+            wrongCount: wrongCount
           });
         } catch (error) {
           console.error('获取学生统计失败:', error);
@@ -87,7 +112,8 @@ const Dashboard = () => {
             paperCount: 0,
             examCount: 0,
             scoreCount: 0,
-            inProgressCount: 0
+            inProgressCount: 0,
+            wrongCount: 0
           });
         }
       }
@@ -173,19 +199,32 @@ const Dashboard = () => {
               onClick={() => navigate('/papers')}
             />
             <StatCard
-              title="已发布试卷"
-              value={stats.paperCount}
-              prefix={<CheckCircleOutlined />}
-              color="#722ed1"
-              icon={<CheckCircleOutlined style={{ fontSize: '48px' }} />}
-            />
-            <StatCard
               title="待批阅试卷"
-              value={0}
+              value={stats.pendingCount || 0}
               prefix={<ClockCircleOutlined />}
               color="#fa8c16"
               icon={<ClockCircleOutlined style={{ fontSize: '48px' }} />}
+              onClick={() => navigate('/scores')}
             />
+            {user?.role === 'admin' && (
+              <StatCard
+                title="用户总数"
+                value={stats.userCount || 0}
+                prefix={<CheckCircleOutlined />}
+                color="#722ed1"
+                icon={<CheckCircleOutlined style={{ fontSize: '48px' }} />}
+                onClick={() => navigate('/users')}
+              />
+            )}
+            {user?.role === 'teacher' && (
+              <StatCard
+                title="已发布试卷"
+                value={stats.paperCount}
+                prefix={<CheckCircleOutlined />}
+                color="#722ed1"
+                icon={<CheckCircleOutlined style={{ fontSize: '48px' }} />}
+              />
+            )}
           </>
         )}
         {user?.role === 'student' && (
@@ -215,7 +254,7 @@ const Dashboard = () => {
             />
             <StatCard
               title="错题数量"
-              value={0}
+              value={stats.wrongCount || 0}
               prefix={<QuestionCircleOutlined />}
               color="#ff4d4f"
               icon={<QuestionCircleOutlined style={{ fontSize: '48px' }} />}

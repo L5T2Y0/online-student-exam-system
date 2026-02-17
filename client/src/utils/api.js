@@ -30,8 +30,14 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
+      // 清理认证信息
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      // 触发全局事件，通知 AuthContext 清理状态
+      window.dispatchEvent(new Event('auth:logout'));
+      // 避免在登录页重复跳转
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

@@ -288,23 +288,31 @@ router.put('/:id/answer', authenticate, authorize('student'), async (req, res) =
 
 // 提交考试
 router.post('/:id/submit', authenticate, authorize('student'), async (req, res) => {
+  const { sequelize } = require('../models');
+  const transaction = await sequelize.transaction();
+  
   try {
-    // 重新从数据库读取最新的考试数据，确保获取到最新的答案
-    // 使用 raw: false 和重新查询确保获取最新数据
+    // 使用事务和行锁防止重复提交
     let exam = await Exam.findByPk(req.params.id, {
-      include: [{ model: Paper, as: 'paper' }]
+      include: [{ model: Paper, as: 'paper' }],
+      lock: transaction.LOCK.UPDATE,
+      transaction
     });
     
     if (!exam) {
+      await transaction.rollback();
       return res.status(404).json({ message: '考试记录不存在' });
     }
 
     if (exam.studentId !== req.user.id) {
+      await transaction.rollback();
       return res.status(403).json({ message: '无权操作此考试' });
     }
 
+    // 防止重复提交
     if (exam.status !== 'in_progress') {
-      return res.status(400).json({ message: '考试已提交' });
+      await transaction.rollback();
+      return res.status(400).json({ message: '考试已提交，不能重复提交' });
     }
 
     await exam.reload();
@@ -424,9 +432,12 @@ router.post('/:id/submit', authenticate, authorize('student'), async (req, res) 
       submitTime: new Date(),
       answers: updatedAnswers,
       totalScore
-    });
+    }, { transaction });
 
-    // 重新加载考试数据，包含关联信息（使用 reload 确保获取最新数据）
+    // 提交事务
+    await transaction.commit();
+
+    // 重新加载考试数据，包含关联信息
     await exam.reload();
     const updatedExam = await Exam.findByPk(exam.id, {
       include: [
@@ -495,6 +506,11 @@ router.post('/:id/submit', authenticate, authorize('student'), async (req, res) 
 
     res.json({ message: '提交成功', exam: updatedExam });
   } catch (error) {
+    // 回滚事务
+    if (transaction && !transaction.finished) {
+      await transaction.rollback();
+    }
+    console.error('提交考试失败:', error);
     res.status(500).json({ message: '提交失败', error: error.message });
   }
 });
@@ -711,6 +727,11 @@ router.get('/:id', authenticate, async (req, res) => {
 router.get('/my/list', authenticate, authorize('student'), async (req, res) => {
   try {
     const { status, page = 1, limit = 10 } = req.query;
+    
+    // 验证并限制分页参数
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+    
     const where = { studentId: req.user.id };
 
     if (status) where.status = status;
@@ -718,15 +739,15 @@ router.get('/my/list', authenticate, authorize('student'), async (req, res) => {
     const { count, rows: exams } = await Exam.findAndCountAll({
       where,
       include: [{ model: Paper, as: 'paper', attributes: ['title', 'subject', 'duration'] }],
-      limit: parseInt(limit),
-      offset: (parseInt(page) - 1) * parseInt(limit),
+      limit: limitNum,
+      offset: (pageNum - 1) * limitNum,
       order: [['createdAt', 'DESC']]
     });
 
     res.json({
       exams,
-      totalPages: Math.ceil(count / limit),
-      currentPage: parseInt(page),
+      totalPages: Math.ceil(count / limitNum),
+      currentPage: pageNum,
       total: count
     });
   } catch (error) {

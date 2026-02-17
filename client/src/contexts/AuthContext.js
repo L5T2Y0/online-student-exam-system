@@ -16,6 +16,16 @@ export const AuthProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
+
+    // 监听全局登出事件
+    const handleLogout = () => {
+      setUser(null);
+    };
+    window.addEventListener('auth:logout', handleLogout);
+    
+    return () => {
+      window.removeEventListener('auth:logout', handleLogout);
+    };
   }, []);
 
   const fetchUser = async () => {

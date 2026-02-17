@@ -10,6 +10,11 @@ const { authenticate, authorize } = require('../middleware/auth');
 router.get('/', authenticate, async (req, res) => {
   try {
     const { subject, status, page = 1, limit = 10 } = req.query;
+    
+    // 验证并限制分页参数
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+    
     const where = {};
 
     if (subject) where.subject = subject;
@@ -18,20 +23,26 @@ router.get('/', authenticate, async (req, res) => {
     // 学生只能看到已发布的试卷
     if (req.user.role === 'student') {
       where.status = 'published';
+    } else if (req.user.role === 'teacher') {
+      // 教师只能看到自己创建的试卷或已发布的试卷
+      where[Op.or] = [
+        { createdBy: req.user.id },
+        { status: 'published' }
+      ];
     }
 
     const { count, rows: papers } = await Paper.findAndCountAll({
       where,
       include: [{ model: User, as: 'creator', attributes: ['name'] }],
-      limit: parseInt(limit),
-      offset: (parseInt(page) - 1) * parseInt(limit),
+      limit: limitNum,
+      offset: (pageNum - 1) * limitNum,
       order: [['createdAt', 'DESC']]
     });
 
     res.json({
       papers,
-      totalPages: Math.ceil(count / limit),
-      currentPage: parseInt(page),
+      totalPages: Math.ceil(count / limitNum),
+      currentPage: pageNum,
       total: count
     });
   } catch (error) {
@@ -48,6 +59,16 @@ router.get('/:id', authenticate, async (req, res) => {
 
     if (!paper) {
       return res.status(404).json({ message: '试卷不存在' });
+    }
+
+    // 学生只能查看已发布的试卷
+    if (req.user.role === 'student' && paper.status !== 'published') {
+      return res.status(403).json({ message: '该试卷尚未发布' });
+    }
+
+    // 教师只能查看自己创建的草稿试卷
+    if (req.user.role === 'teacher' && paper.status === 'draft' && paper.createdBy !== req.user.id) {
+      return res.status(403).json({ message: '无权查看此试卷' });
     }
 
     // 如果试卷中有题目ID，需要加载题目详情
@@ -84,10 +105,27 @@ router.get('/:id', authenticate, async (req, res) => {
 // 创建试卷（教师和管理员）
 router.post('/', authenticate, authorize('teacher', 'admin'), async (req, res) => {
   try {
-    const { title, description, subject, totalScore, duration, questions } = req.body;
+    const { title, description, subject, totalScore, duration, questions, startTime, endTime } = req.body;
 
     if (!title || !subject || !totalScore || !duration || !questions || questions.length === 0) {
       return res.status(400).json({ message: '请填写必填字段' });
+    }
+
+    // 验证时间窗口
+    if (startTime && endTime) {
+      const start = new Date(startTime);
+      const end = new Date(endTime);
+      if (start >= end) {
+        return res.status(400).json({ message: '开始时间必须早于结束时间' });
+      }
+    }
+
+    // 验证分数和时长
+    if (totalScore <= 0) {
+      return res.status(400).json({ message: '试卷总分必须大于0' });
+    }
+    if (duration <= 0) {
+      return res.status(400).json({ message: '考试时长必须大于0' });
     }
 
     // 验证题目是否存在并检查重复
@@ -241,14 +279,35 @@ router.put('/:id', authenticate, authorize('teacher', 'admin'), async (req, res)
       return res.status(403).json({ message: '无权修改此试卷' });
     }
 
-    const { title, description, subject, totalScore, duration, questions, status, allowRetake } = req.body;
+    const { title, description, subject, totalScore, duration, questions, status, allowRetake, startTime, endTime } = req.body;
 
     const updateData = {};
     if (title) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (subject) updateData.subject = subject;
-    if (totalScore) updateData.totalScore = totalScore;
-    if (duration) updateData.duration = duration;
+    if (totalScore !== undefined) {
+      if (totalScore <= 0) {
+        return res.status(400).json({ message: '试卷总分必须大于0' });
+      }
+      updateData.totalScore = totalScore;
+    }
+    if (duration !== undefined) {
+      if (duration <= 0) {
+        return res.status(400).json({ message: '考试时长必须大于0' });
+      }
+      updateData.duration = duration;
+    }
+    
+    // 验证时间窗口
+    if (startTime !== undefined || endTime !== undefined) {
+      const start = startTime ? new Date(startTime) : paper.startTime;
+      const end = endTime ? new Date(endTime) : paper.endTime;
+      if (start && end && start >= end) {
+        return res.status(400).json({ message: '开始时间必须早于结束时间' });
+      }
+      if (startTime !== undefined) updateData.startTime = startTime;
+      if (endTime !== undefined) updateData.endTime = endTime;
+    }
     if (questions) {
       // 验证题目是否存在并检查重复
       const questionIds = questions.map(q => {

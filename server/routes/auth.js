@@ -2,8 +2,17 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
+const xss = require('xss');
 const User = require('../models/User');
 const { JWT_SECRET } = require('../middleware/auth');
+
+// XSS 清理函数
+const sanitizeInput = (input) => {
+  if (typeof input === 'string') {
+    return xss(input.trim());
+  }
+  return input;
+};
 
 // 生成token
 const generateToken = (userId) => {
@@ -27,7 +36,14 @@ router.post('/register', [
       });
     }
 
-    const { username, password, name, role, studentId, email, phone } = req.body;
+    // 输入清理
+    const username = sanitizeInput(req.body.username);
+    const password = req.body.password; // 密码不清理，保持原样
+    const name = sanitizeInput(req.body.name);
+    const role = req.body.role;
+    const studentId = sanitizeInput(req.body.studentId);
+    const email = sanitizeInput(req.body.email);
+    const phone = sanitizeInput(req.body.phone);
 
     // 禁止通过注册接口创建管理员账户（安全措施）
     if (role === 'admin') {

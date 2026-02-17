@@ -240,7 +240,7 @@ const PaperForm = () => {
         form={form}
         layout="vertical"
         onFinish={onFinish}
-        initialValues={{ duration: 60, totalScore: 100 }}
+        initialValues={{ duration: 60, totalScore: 0 }}
       >
         <Form.Item
           name="title"

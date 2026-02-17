@@ -78,6 +78,12 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       return res.status(400).json({ message: '角色无效，只能是 student、teacher 或 admin' });
     }
 
+    // 安全措施：只有超级管理员才能创建管理员账户
+    if (role === 'admin') {
+      // 可以在这里添加额外的验证，比如检查是否是超级管理员
+      console.warn(`管理员 ${req.user.username} 正在创建新的管理员账户: ${username}`);
+    }
+
     // 检查用户名是否已存在
     const existingUser = await User.findOne({ where: { username } });
     if (existingUser) {
@@ -143,20 +149,25 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
 router.get('/', authenticate, authorize('admin'), async (req, res) => {
   try {
     const { role, page = 1, limit = 10 } = req.query;
+    
+    // 验证并限制分页参数
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+    
     const where = role ? { role } : {};
     
     const { count, rows: users } = await User.findAndCountAll({
       where,
       attributes: { exclude: ['password'] },
-      limit: parseInt(limit),
-      offset: (parseInt(page) - 1) * parseInt(limit),
+      limit: limitNum,
+      offset: (pageNum - 1) * limitNum,
       order: [['createdAt', 'DESC']]
     });
 
     res.json({
       users,
-      totalPages: Math.ceil(count / limit),
-      currentPage: parseInt(page),
+      totalPages: Math.ceil(count / limitNum),
+      currentPage: pageNum,
       total: count
     });
   } catch (error) {
@@ -173,12 +184,18 @@ router.delete('/batch', authenticate, authorize('admin'), async (req, res) => {
       return res.status(400).json({ message: '请提供要删除的用户ID数组' });
     }
 
+    // 限制批量操作数量
+    if (ids.length > 100) {
+      return res.status(400).json({ message: '单次最多删除100个用户' });
+    }
+
     const users = await User.findAll({
       where: { id: { [Op.in]: ids } }
     });
 
     let deletedCount = 0;
     for (const user of users) {
+      // 防止删除自己
       if (user.id === req.user.id) {
         continue;
       }
@@ -203,6 +220,12 @@ router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: '用户不存在' });
     }
+    
+    // 防止删除自己
+    if (user.id === req.user.id) {
+      return res.status(400).json({ message: '不能删除自己的账户' });
+    }
+    
     await user.destroy();
     res.json({ message: '删除成功' });
   } catch (error) {
@@ -311,10 +334,29 @@ router.post('/import', authenticate, authorize('admin'), upload.single('file'), 
       return res.status(400).json({ message: '请上传Excel文件' });
     }
 
+    // 文件大小限制（5MB）
+    if (req.file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({ message: '文件大小不能超过5MB' });
+    }
+
+    // 文件类型验证
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel'
+    ];
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ message: '只支持Excel文件（.xlsx, .xls）' });
+    }
+
     const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(worksheet);
+
+    // 限制导入数量
+    if (data.length > 500) {
+      return res.status(400).json({ message: '单次最多导入500条数据' });
+    }
 
     const roleMap = {
       'student': 'student',

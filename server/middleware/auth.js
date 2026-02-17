@@ -1,7 +1,15 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+// 验证 JWT_SECRET 是否配置
+if (!process.env.JWT_SECRET) {
+  console.error('❌ 严重错误：未设置 JWT_SECRET 环境变量！');
+  console.error('请在 .env 文件中设置强密钥，例如：');
+  console.error('JWT_SECRET=your-very-long-and-random-secret-key-at-least-32-characters');
+  process.exit(1);
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // 验证token
 exports.authenticate = async (req, res, next) => {

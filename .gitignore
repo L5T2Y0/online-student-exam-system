@@ -54,3 +54,7 @@ coverage/
 *.seed
 *.pid.lock
 
+# 测试文件
+test-*.ps1
+*.csv
+

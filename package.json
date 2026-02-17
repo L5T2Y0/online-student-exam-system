@@ -1,7 +1,7 @@
 {
   "name": "online-exam-system",
-  "version": "1.0.0",
-  "description": "学生在线考试系统",
+  "version": "1.1.1",
+  "description": "一个功能完整、安全可靠的在线考试系统 - 支持题库管理、自动组卷、在线考试、自动评分",
   "main": "server/index.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
@@ -16,21 +16,32 @@
   "keywords": [
     "exam",
     "online",
-    "education"
+    "education",
+    "react",
+    "nodejs",
+    "mysql",
+    "express",
+    "sequelize"
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/L5T2Y0/online-student-exam-system.git"
+  },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-rate-limit": "^8.2.1",
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "mysql2": "^3.6.0",
     "sequelize": "^6.32.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "xss": "^1.0.15"
   },
   "devDependencies": {
     "concurrently": "^8.2.0",

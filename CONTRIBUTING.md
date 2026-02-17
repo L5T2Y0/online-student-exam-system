@@ -6,14 +6,14 @@
 
 ### 报告 Bug
 
-1. 确保 Bug 尚未被报告，搜索 [Issues](https://github.com/yourusername/online-exam-system/issues)
-2. 如果没有找到相关 Issue，[创建新的 Bug 报告](https://github.com/yourusername/online-exam-system/issues/new?template=bug_report.md)
+1. 确保 Bug 尚未被报告，搜索 [Issues](https://github.com/L5T2Y0/online-student-exam-system/issues)
+2. 如果没有找到相关 Issue，[创建新的 Bug 报告](https://github.com/L5T2Y0/online-student-exam-system/issues/new?template=bug_report.md)
 3. 提供详细的复现步骤和环境信息
 
 ### 提出新功能
 
-1. 搜索 [Issues](https://github.com/yourusername/online-exam-system/issues) 确保功能未被提出
-2. [创建功能请求](https://github.com/yourusername/online-exam-system/issues/new?template=feature_request.md)
+1. 搜索 [Issues](https://github.com/L5T2Y0/online-student-exam-system/issues) 确保功能未被提出
+2. [创建功能请求](https://github.com/L5T2Y0/online-student-exam-system/issues/new?template=feature_request.md)
 3. 清晰描述功能和使用场景
 
 ### 提交代码

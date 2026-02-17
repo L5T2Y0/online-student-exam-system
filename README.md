@@ -101,9 +101,8 @@ online-exam-system/
 ### 2. 克隆项目
 
 ```bash
-git clone [https://github.com/your-username/online-student-exam-system.git](https://github.com/your-username/online-student-exam-system.git)
+git clone https://github.com/L5T2Y0/online-student-exam-system.git
 cd online-student-exam-system
-
 ```
 
 ### 3. 安装依赖
@@ -120,14 +119,12 @@ npm run install-all
 **或者手动分步安装:**
 
 ```bash
-# 安装后端依赖
-cd server
+# 安装根目录依赖
 npm install
 
 # 安装前端依赖
-cd ../client
+cd client
 npm install
-
 ```
 
 ### 4. 配置环境变量
